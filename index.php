@@ -2,9 +2,8 @@
 // Configurar zona horaria oficial de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// Habilitar reporte de errores para depuración
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+// Configuración para captura de errores
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 $mensaje_exito = "";
@@ -17,12 +16,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!empty($nombre) && !empty($peticion)) {
         try {
-            // Conexión PDO compatible con las variables de entorno de Railway
-            $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
-            $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
-            $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
-            $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
-            $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+            // Lectura preferente de URL directa de base de datos
+            $db_url = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: getenv('MYSQLURL');
+
+            if ($db_url) {
+                $dbopts = parse_url($db_url);
+                $host = $dbopts['host'] ?? '127.0.0.1';
+                $port = $dbopts['port'] ?? '3306';
+                $user = $dbopts['user'] ?? 'root';
+                $pass = $dbopts['pass'] ?? '';
+                $db   = isset($dbopts['path']) ? ltrim($dbopts['path'], '/') : 'railway';
+            } else {
+                $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
+                $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
+                $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
+                $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
+                $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+            }
 
             $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -36,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
         } catch (PDOException $e) {
-            $mensaje_error = "Error de conexión: " . htmlspecialchars($e->getMessage());
+            $mensaje_error = "Error al procesar la petición. Inténtalo de nuevo en unos momentos.";
         }
     } else {
         $mensaje_error = "Por favor, completa todos los campos requeridos.";
@@ -50,9 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enviar Petición de Oración</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background-color: #FDF6EC;
@@ -102,9 +110,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             text-align: center;
             font-weight: 600;
         }
-        .form-group {
-            margin-bottom: 18px;
-        }
+        .form-group { margin-bottom: 18px; }
         label {
             display: block;
             margin-bottom: 6px;
@@ -112,8 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             color: #5D4037;
             font-size: 14px;
         }
-        input[type="text"],
-        textarea {
+        input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             border: 1.5px solid #E6D7CF;
@@ -124,14 +129,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             outline: none;
             transition: border-color 0.2s;
         }
-        input[type="text"]:focus,
-        textarea:focus {
-            border-color: #F48FB1;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 110px;
-        }
+        input[type="text"]:focus, textarea:focus { border-color: #F48FB1; }
+        textarea { resize: vertical; min-height: 110px; }
         button[type="submit"] {
             width: 100%;
             background-color: #F48FB1;
@@ -146,9 +145,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             letter-spacing: 0.5px;
             transition: background-color 0.2s;
         }
-        button[type="submit"]:hover {
-            background-color: #F06292;
-        }
+        button[type="submit"]:hover { background-color: #F06292; }
     </style>
 </head>
 <body>
@@ -157,15 +154,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <h2>Enviar Petición</h2>
 
     <?php if (!empty($mensaje_error)): ?>
-        <div class="alerta-error">
-            <?php echo $mensaje_error; ?>
-        </div>
+        <div class="alerta-error"><?php echo $mensaje_error; ?></div>
     <?php endif; ?>
 
     <?php if (!empty($mensaje_exito)): ?>
-        <div class="alerta-exito">
-            <?php echo $mensaje_exito; ?>
-        </div>
+        <div class="alerta-exito"><?php echo $mensaje_exito; ?></div>
     <?php endif; ?>
 
     <form method="POST" action="index.php">

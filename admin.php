@@ -1,5 +1,5 @@
 <?php
-// Configurar zona horaria oficial de Venezuela
+// Configurar zona horaria oficial de Venezuela en PHP
 date_default_timezone_set('America/Caracas');
 
 $todos_los_registros = [];
@@ -26,6 +26,9 @@ try {
 
     $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // FORZAR A MYSQL A USAR LA ZONA HORARIA DE VENEZUELA (UTC-4)
+    $pdo->exec("SET time_zone = '-04:00';");
 
     // LÓGICA PARA ELIMINAR UNA PETICIÓN INDIVIDUAL
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'eliminar_uno') {

@@ -141,7 +141,7 @@ try {
                     echo '<div class="mensaje error">Por favor, completa todos los campos.</div>';
                 }
             } catch (PDOException $e) {
-                echo '<div class="mensaje error">Error de conexión. Inténtalo más tarde.</div>';
+               echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()).</div>';
             }
         }
         ?>

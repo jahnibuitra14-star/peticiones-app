@@ -118,14 +118,15 @@
         <?php
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // CÓDIGO NUEVO (VARIABLES DE ENTORNO RAILWAY):
-$host = getenv('MYSQLHOST') ?: 'localhost';
-$db   = getenv('MYSQLDATABASE') ?: 'railway';
-$user = getenv('MYSQLUSER') ?: 'root';
-$pass = getenv('MYSQLPASSWORD') ?: '';
-$port = getenv('MYSQLPORT') ?: '3306';
+            $host = getenv('MYSQLHOST') ?: 'localhost';
+            $db   = getenv('MYSQLDATABASE') ?: 'railway';
+            $user = getenv('MYSQLUSER') ?: 'root';
+            $pass = getenv('MYSQLPASSWORD') ?: '';
+            $port = getenv('MYSQLPORT') ?: '3306';
 
-try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
+            try {
+                $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 $nombre   = trim($_POST["nombre"] ?? '');
                 $peticion = trim($_POST["peticion"] ?? '');
@@ -141,7 +142,7 @@ try {
                     echo '<div class="mensaje error">Por favor, completa todos los campos.</div>';
                 }
             } catch (PDOException $e) {
-               echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()).</div>';
+                echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()) . '</div>';
             }
         }
         ?>

@@ -45,6 +45,9 @@ try {
     }
 
 } catch (PDOException $e) {
+                // Muestra el mensaje de error exacto de MySQL para saber qué pasa
+                echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()) . '</div>';
+            }
     die("<body style='background-color:#FDF6EC;font-family:sans-serif;padding:20px;'><div style='background:white;padding:20px;border-radius:8px;color:#C62828;border:1px solid #FFCDD2;'>Error de conexión a la base de datos.</div></body>");
 }
 ?>

@@ -9,6 +9,9 @@ $user = getenv('MYSQLUSER') ?: 'root';
 $pass = getenv('MYSQLPASSWORD') ?: '';
 $port = getenv('MYSQLPORT') ?: '3306';
 
+$todos_los_registros = [];
+$registros_por_fecha = [];
+
 try {
     $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -33,22 +36,22 @@ try {
     }
     
     // TRAE TODOS LOS REGISTROS ORDENADOS POR FECHA Y HORA (MÁS RECIENTES PRIMERO)
-    $stmt = $pdo->prepare("SELECT *, DATE(fecha_registro) as fecha_dia FROM registros ORDER BY fecha_registro DESC");
+    $stmt = $pdo->prepare("SELECT *, DATE(fecha) as fecha_dia FROM registros ORDER BY fecha DESC");
     $stmt->execute();
     $todos_los_registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // AGRUPAR REGISTROS POR FECHA
-    $registros_por_fecha = [];
     foreach ($todos_los_registros as $row) {
         $fecha = $row['fecha_dia'];
         $registros_por_fecha[$fecha][] = $row;
     }
 
 } catch (PDOException $e) {
-                // Muestra el mensaje de error exacto de MySQL para saber qué pasa
-                echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()) . '</div>';
-            }
-    die("<body style='background-color:#FDF6EC;font-family:sans-serif;padding:20px;'><div style='background:white;padding:20px;border-radius:8px;color:#C62828;border:1px solid #FFCDD2;'>Error de conexión a la base de datos.</div></body>");
+    die("<body style='background-color:#FDF6EC;font-family:sans-serif;padding:20px;'>
+        <div style='background:white;padding:20px;border-radius:8px;color:#C62828;border:1px solid #FFCDD2;'>
+            <strong>Error de conexión a la base de datos:</strong> " . htmlspecialchars($e->getMessage()) . "
+        </div>
+    </body>");
 }
 ?>
 <!DOCTYPE html>
@@ -277,7 +280,7 @@ try {
                     <tbody>
                         <?php foreach ($peticiones_dia as $row): ?>
                             <tr class="fila-peticion" data-id="<?php echo $row['id']; ?>">
-                                <td class="hora"><?php echo date("H:i", strtotime($row['fecha_registro'])); ?></td>
+                                <td class="hora"><?php echo date("H:i", strtotime($row['fecha'])); ?></td>
                                 <td class="nombre"><?php echo htmlspecialchars($row['nombre']); ?></td>
                                 <td class="peticion"><?php echo nl2br(htmlspecialchars($row['peticion'])); ?></td>
                             </tr>

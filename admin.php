@@ -2,14 +2,15 @@
 // Configurar zona horaria oficial de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// TUS DATOS DE CONEXIÓN
-$host = "sql104.infinityfree.com"; 
-$db   = "if0_42738704_peticiones"; 
-$user = "if0_42738704";            
-$pass = "jahnissi21";
+// TUS DATOS DE CONEXIÓN (Variables de Entorno Railway)
+$host = getenv('MYSQLHOST') ?: 'localhost';
+$db   = getenv('MYSQLDATABASE') ?: 'railway';
+$user = getenv('MYSQLUSER') ?: 'root';
+$pass = getenv('MYSQLPASSWORD') ?: '';
+$port = getenv('MYSQLPORT') ?: '3306';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // LÓGICA PARA ELIMINAR UNA PETICIÓN INDIVIDUAL

@@ -117,14 +117,15 @@
 
         <?php
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
-            $host = "sql104.infinityfree.com"; 
-            $db   = "if0_42738704_peticiones"; 
-            $user = "if0_42738704";            
-            $pass = "jahnissi21";
+            // CÓDIGO NUEVO (VARIABLES DE ENTORNO RAILWAY):
+$host = getenv('MYSQLHOST') ?: 'localhost';
+$db   = getenv('MYSQLDATABASE') ?: 'railway';
+$user = getenv('MYSQLUSER') ?: 'root';
+$pass = getenv('MYSQLPASSWORD') ?: '';
+$port = getenv('MYSQLPORT') ?: '3306';
 
-            try {
-                $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
 
                 $nombre   = trim($_POST["nombre"] ?? '');
                 $peticion = trim($_POST["peticion"] ?? '');

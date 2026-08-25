@@ -10,7 +10,7 @@ try {
     $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
     $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
     $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
-    $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: '';
+    $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
     $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
 
     // Instancia PDO dentro del bloque try

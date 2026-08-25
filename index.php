@@ -1,163 +1,187 @@
+<?php
+// Configurar zona horaria oficial de Venezuela
+date_default_timezone_set('America/Caracas');
+
+// Habilitar reporte de errores para depuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+$mensaje_exito = "";
+$mensaje_error = "";
+
+// PROCESAR EL FORMULARIO CUANDO SE ENVÍA (POST)
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $nombre = trim($_POST['nombre'] ?? '');
+    $peticion = trim($_POST['peticion'] ?? '');
+
+    if (!empty($nombre) && !empty($peticion)) {
+        try {
+            // Conexión PDO compatible con las variables de entorno de Railway
+            $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
+            $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
+            $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
+            $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
+            $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+
+            $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Inserción en la base de datos usando sentencias preparadas
+            $stmt = $pdo->prepare("INSERT INTO registros (nombre, peticion, fecha_registro) VALUES (:nombre, :peticion, NOW())");
+            $stmt->execute([
+                ':nombre'   => $nombre,
+                ':peticion' => $peticion
+            ]);
+
+            $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
+        } catch (PDOException $e) {
+            $mensaje_error = "Error de conexión: " . htmlspecialchars($e->getMessage());
+        }
+    } else {
+        $mensaje_error = "Por favor, completa todos los campos requeridos.";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rajel-Amishav - Enviar Petición</title>
-    <?php date_default_timezone_set('America/Caracas'); ?>
+    <title>Enviar Petición de Oración</title>
     <style>
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            max-width: 480px; 
-            margin: 0 auto; 
-            padding: 30px 20px; 
-            background-color: #FDF6EC; 
-            /* MARCA DE AGUA Y FONDO BEIGE */
-            background-image: linear-gradient(rgba(253, 246, 236, 0.92), rgba(253, 246, 236, 0.92)), url('logo.png');
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-attachment: fixed;
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #FDF6EC;
             color: #5D4037;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        .card { 
-            background-color: #FFFFFF; 
-            border: 1px solid #F3E5DC; 
-            border-radius: 16px; 
-            padding: 25px 30px 30px 30px; 
-            box-shadow: 0 8px 25px rgba(93, 64, 55, 0.08); 
-        }
-        .logo-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .logo-container img {
-            max-width: 200px;
-            height: auto;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.12);
+        .form-card {
+            background-color: #FFFFFF;
+            padding: 30px 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 15px rgba(93, 64, 55, 0.08);
+            border: 1px solid #F3E5DC;
         }
         h2 {
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 0;
+            color: #5D4037;
+            font-size: 22px;
             text-align: center;
-            color: #5D4037;
-            font-weight: 700;
-            font-size: 20px;
+            margin-bottom: 20px;
         }
-        .form-group { margin-bottom: 18px; }
-        label { 
-            display: block; 
-            margin-bottom: 7px; 
-            font-weight: 600; 
-            color: #5D4037; 
-            font-size: 15px;
+        .alerta-error {
+            background-color: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-word;
         }
-        input, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #E6D7CF; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 15px; 
-            background-color: #FFF;
-            color: #5D4037;
-            transition: all 0.2s;
-        }
-        input:focus, textarea:focus { 
-            outline: none; 
-            border-color: #F8BBD0; 
-            box-shadow: 0 0 0 3px rgba(248, 187, 208, 0.3);
-        }
-        button { 
-            background-color: #F48FB1; 
-            color: white; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 8px; 
-            width: 100%; 
-            font-weight: 700; 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: background-color 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        button:hover { 
-            background-color: #F06292; 
-        }
-        .mensaje { 
-            margin-bottom: 20px; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 14px; 
+        .alerta-exito {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #C8E6C9;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
             text-align: center;
             font-weight: 600;
         }
-        .exito { 
-            background-color: #E8F5E9; 
-            color: #2E7D32; 
-            border: 1px solid #C8E6C9;
+        .form-group {
+            margin-bottom: 18px;
         }
-        .error { 
-            background-color: #FFEBEE; 
-            color: #C62828; 
-            border: 1px solid #FFCDD2;
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: #5D4037;
+            font-size: 14px;
+        }
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #E6D7CF;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #333;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #F48FB1;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+        button[type="submit"] {
+            width: 100%;
+            background-color: #F48FB1;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.2s;
+        }
+        button[type="submit"]:hover {
+            background-color: #F06292;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <!-- LOGO ENCABEZADO -->
-        <div class="logo-container">
-            <img src="logo.png" alt="Rajel Amishav Logo">
+
+<div class="form-card">
+    <h2>Enviar Petición</h2>
+
+    <?php if (!empty($mensaje_error)): ?>
+        <div class="alerta-error">
+            <?php echo $mensaje_error; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($mensaje_exito)): ?>
+        <div class="alerta-exito">
+            <?php echo $mensaje_exito; ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="index.php">
+        <div class="form-group">
+            <label for="nombre">Nombre completo:</label>
+            <input type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required autocomplete="off">
         </div>
 
-        <h2>Registro de Petición</h2>
+        <div class="form-group">
+            <label for="peticion">Escribe tu petición:</label>
+            <textarea id="peticion" name="peticion" placeholder="Escribe aquí el motivo de oración..." required></textarea>
+        </div>
 
-        <?php
-        if ($_SERVER["REQUEST_METHOD"] === "POST") {
-            // CÓDIGO NUEVO (VARIABLES DE ENTORNO RAILWAY):
-            $host = getenv('MYSQLHOST') ?: 'localhost';
-            $db   = getenv('MYSQLDATABASE') ?: 'railway';
-            $user = getenv('MYSQLUSER') ?: 'root';
-            $pass = getenv('MYSQLPASSWORD') ?: '';
-            $port = getenv('MYSQLPORT') ?: '3306';
+        <button type="submit">Enviar Petición</button>
+    </form>
+</div>
 
-            try {
-                $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                $nombre   = trim($_POST["nombre"] ?? '');
-                $peticion = trim($_POST["peticion"] ?? '');
-
-                if (!empty($nombre) && !empty($peticion)) {
-                    $stmt = $pdo->prepare("INSERT INTO registros (nombre, peticion) VALUES (:nombre, :peticion)");
-                    $stmt->execute([
-                        ':nombre'   => $nombre,
-                        ':peticion' => $peticion
-                    ]);
-                    echo '<div class="mensaje exito">✓ Petición enviada correctamente. ¡Dios te bendiga!</div>';
-                } else {
-                    echo '<div class="mensaje error">Por favor, completa todos los campos.</div>';
-                }
-            } catch (PDOException $e) {
-                echo '<div class="mensaje error">Error de conexión: ' . htmlspecialchars($e->getMessage()) . '</div>';
-            }
-        }
-        ?>
-
-        <form method="POST">
-            <div class="form-group">
-                <label for="nombre">Nombre completo:</label>
-                <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
-            </div>
-            <div class="form-group">
-                <label for="peticion">Escribe tu petición:</label>
-                <textarea id="peticion" name="peticion" rows="5" placeholder="Escribe aquí los detalles..." required></textarea>
-            </div>
-            <button type="submit">Enviar Petición</button>
-        </form>
-    </div>
 </body>
 </html>

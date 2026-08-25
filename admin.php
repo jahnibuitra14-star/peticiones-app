@@ -2,9 +2,9 @@
 // Configurar zona horaria oficial de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// TUS DATOS DE CONEXIÓN (Variables de Entorno Railway)
+// TUS DATOS DE CONEXIÓN (Variables de Entorno Railway con fallback a la BD local)
 $host = getenv('MYSQLHOST') ?: 'localhost';
-$db   = getenv('MYSQLDATABASE') ?: 'railway';
+$db   = getenv('MYSQLDATABASE') ?: 'if0_42738704_peticiones';
 $user = getenv('MYSQLUSER') ?: 'root';
 $pass = getenv('MYSQLPASSWORD') ?: '';
 $port = getenv('MYSQLPORT') ?: '3306';
@@ -13,7 +13,7 @@ $todos_los_registros = [];
 $registros_por_fecha = [];
 
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8", $user, $pass);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // LÓGICA PARA ELIMINAR UNA PETICIÓN INDIVIDUAL
@@ -35,8 +35,8 @@ try {
         exit;
     }
     
-    // TRAE TODOS LOS REGISTROS ORDENADOS POR FECHA Y HORA (MÁS RECIENTES PRIMERO)
-    $stmt = $pdo->prepare("SELECT *, DATE(fecha) as fecha_dia FROM registros ORDER BY fecha DESC");
+    // TRAE TODOS LOS REGISTROS USA LA COLUMNA CORRECTA: fecha_registro
+    $stmt = $pdo->prepare("SELECT *, DATE(fecha_registro) as fecha_dia FROM registros ORDER BY fecha_registro DESC");
     $stmt->execute();
     $todos_los_registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -280,7 +280,7 @@ try {
                     <tbody>
                         <?php foreach ($peticiones_dia as $row): ?>
                             <tr class="fila-peticion" data-id="<?php echo $row['id']; ?>">
-                                <td class="hora"><?php echo date("H:i", strtotime($row['fecha'])); ?></td>
+                                <td class="hora"><?php echo date("H:i", strtotime($row['fecha_registro'])); ?></td>
                                 <td class="nombre"><?php echo htmlspecialchars($row['nombre']); ?></td>
                                 <td class="peticion"><?php echo nl2br(htmlspecialchars($row['peticion'])); ?></td>
                             </tr>

@@ -2,20 +2,27 @@
 // Configurar zona horaria oficial de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// Habilitar visualización de errores para depuración
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 $todos_los_registros = [];
 $registros_por_fecha = [];
 
 try {
-    $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
-    $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
-    $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
-    $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
-    $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+    // Lectura preferente de URL directa de base de datos
+    $db_url = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: getenv('MYSQLURL');
+
+    if ($db_url) {
+        $dbopts = parse_url($db_url);
+        $host = $dbopts['host'] ?? '127.0.0.1';
+        $port = $dbopts['port'] ?? '3306';
+        $user = $dbopts['user'] ?? 'root';
+        $pass = $dbopts['pass'] ?? '';
+        $db   = isset($dbopts['path']) ? ltrim($dbopts['path'], '/') : 'railway';
+    } else {
+        $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
+        $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
+        $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
+        $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
+        $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+    }
 
     $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -62,6 +69,7 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Peticiones - Panel</title>
     <style>
         body { 
@@ -117,9 +125,7 @@ try {
             letter-spacing: 0.5px;
             transition: background-color 0.2s;
         }
-        .btn-imprimir:hover { 
-            background-color: #F06292; 
-        }
+        .btn-imprimir:hover { background-color: #F06292; }
 
         .btn-eliminar-todo {
             background-color: #E57373;
@@ -134,9 +140,7 @@ try {
             letter-spacing: 0.5px;
             transition: background-color 0.2s;
         }
-        .btn-eliminar-todo:hover {
-            background-color: #D32F2F;
-        }
+        .btn-eliminar-todo:hover { background-color: #D32F2F; }
         
         .alerta-exito {
             background-color: #E8F5E9;
@@ -175,12 +179,8 @@ try {
             cursor: context-menu;
             user-select: text;
         }
-        tr.fila-peticion:nth-child(even) td {
-            background-color: #FDFBF9;
-        }
-        tr.fila-peticion:hover td {
-            background-color: #FFF0F5;
-        }
+        tr.fila-peticion:nth-child(even) td { background-color: #FDFBF9; }
+        tr.fila-peticion:hover td { background-color: #FFF0F5; }
         .hora { color: #8D6E63; font-weight: 600; }
         .nombre { color: #5D4037; font-weight: 700; }
         .peticion { line-height: 1.5; color: #6D4C41; }
@@ -208,9 +208,7 @@ try {
             cursor: pointer;
             transition: background 0.2s;
         }
-        #context-menu button:hover {
-            background-color: #FFEBEE;
-        }
+        #context-menu button:hover { background-color: #FFEBEE; }
         
         @media print {
             .no-print { display: none !important; }

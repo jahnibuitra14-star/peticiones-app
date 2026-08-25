@@ -2,18 +2,20 @@
 // Configurar zona horaria oficial de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// TUS DATOS DE CONEXIÓN (Variables de Entorno Railway con fallback a la BD local)
-$host = getenv('MYSQLHOST') ?: 'localhost';
-$db   = getenv('MYSQLDATABASE') ?: 'if0_42738704_peticiones';
-$user = getenv('MYSQLUSER') ?: 'root';
-$pass = getenv('MYSQLPASSWORD') ?: '';
-$port = getenv('MYSQLPORT') ?: '3306';
+// Cambia la línea de conexión PDO para incluir el puerto correctamente:
+$host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
+$db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
+$user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
+$pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: '';
+$port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
+
+$pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
 
 $todos_los_registros = [];
 $registros_por_fecha = [];
 
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
+   
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // LÓGICA PARA ELIMINAR UNA PETICIÓN INDIVIDUAL

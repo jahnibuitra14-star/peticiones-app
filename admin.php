@@ -75,9 +75,10 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Peticiones - Panel</title>
     <style>
+        * { box-sizing: border-box; }
         body { 
             font-family: system-ui, -apple-system, sans-serif; 
-            padding: 40px 20px; 
+            padding: 20px 10px; 
             max-width: 950px; 
             margin: 0 auto; 
             color: #5D4037; 
@@ -85,15 +86,19 @@ try {
         }
         .main-container {
             background-color: #FFFFFF;
-            padding: 30px;
+            padding: 20px 15px;
             border-radius: 12px;
             border: 1px solid #F3E5DC;
             box-shadow: 0 4px 15px rgba(93, 64, 55, 0.05);
+            width: 100%;
+            overflow: hidden;
         }
         .header { 
             display: flex; 
+            flex-wrap: wrap; 
             justify-content: space-between; 
             align-items: center; 
+            gap: 15px;
             margin-bottom: 25px; 
             padding-bottom: 15px;
             border-bottom: 2px solid #FDF6EC;
@@ -101,48 +106,37 @@ try {
         .acciones-header {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
         }
-        h2 { margin: 0; color: #5D4037; font-weight: 700; }
+        h2 { margin: 0; color: #5D4037; font-weight: 700; font-size: 20px; }
         
         .titulo-fecha {
-            margin-top: 30px;
+            margin-top: 25px;
             margin-bottom: 12px;
             color: #8D6E63;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             border-bottom: 2px solid #FAF0E6;
             padding-bottom: 5px;
-            text-transform: capitalize;
         }
 
-        .btn-imprimir { 
-            background-color: #F48FB1; 
-            color: white; 
-            padding: 10px 18px; 
+        .btn-imprimir, .btn-eliminar-todo { 
+            flex: 1;
+            text-align: center;
+            padding: 10px 12px; 
             border: none; 
             border-radius: 8px; 
             font-weight: 700; 
             cursor: pointer; 
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            transition: background-color 0.2s;
+            white-space: nowrap;
         }
+        .btn-imprimir { background-color: #F48FB1; color: white; }
         .btn-imprimir:hover { background-color: #F06292; }
-
-        .btn-eliminar-todo {
-            background-color: #E57373;
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background-color 0.2s;
-        }
+        .btn-eliminar-todo { background-color: #E57373; color: white; }
         .btn-eliminar-todo:hover { background-color: #D32F2F; }
         
         .alerta-exito {
@@ -157,26 +151,33 @@ try {
             text-align: center;
         }
 
+        /* Contenedor responsivo para la tabla */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         table { 
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 5px; 
             margin-bottom: 20px;
             background-color: #FFF;
+            min-width: 500px;
         }
         th, td { 
             border: 1px solid #E6D7CF; 
-            padding: 14px 16px; 
+            padding: 10px 12px; 
             text-align: left; 
-            font-size: 15px;
+            font-size: 14px;
         }
         th { 
             background-color: #FAF0E6; 
             font-weight: 700; 
             color: #5D4037;
             text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 0.5px;
+            font-size: 12px;
         }
         tr.fila-peticion {
             cursor: context-menu;
@@ -184,9 +185,9 @@ try {
         }
         tr.fila-peticion:nth-child(even) td { background-color: #FDFBF9; }
         tr.fila-peticion:hover td { background-color: #FFF0F5; }
-        .hora { color: #8D6E63; font-weight: 600; }
+        .hora { color: #8D6E63; font-weight: 600; white-space: nowrap; }
         .nombre { color: #5D4037; font-weight: 700; }
-        .peticion { line-height: 1.5; color: #6D4C41; }
+        .peticion { line-height: 1.4; color: #6D4C41; }
 
         #context-menu {
             display: none;
@@ -212,29 +213,24 @@ try {
             transition: background 0.2s;
         }
         #context-menu button:hover { background-color: #FFEBEE; }
+
+        /* Pantallas grandes */
+        @media (min-width: 600px) {
+            body { padding: 40px 20px; }
+            .main-container { padding: 30px; }
+            .acciones-header { width: auto; }
+            .btn-imprimir, .btn-eliminar-todo { flex: none; font-size: 13px; padding: 10px 18px; }
+            h2 { font-size: 22px; }
+            th, td { padding: 14px 16px; font-size: 15px; }
+            table { min-width: 100%; }
+        }
         
         @media print {
             .no-print { display: none !important; }
-            body { 
-                padding: 0; 
-                background-color: white !important; 
-                color: black !important;
-            }
-            .main-container {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                background-color: white !important;
-            }
-            table { 
-                border: 1px solid #000 !important; 
-                background-color: white !important;
-            }
-            th, td { 
-                border: 1px solid #000 !important; 
-                padding: 10px !important;
-                color: black !important;
-            }
+            body { padding: 0; background-color: white !important; color: black !important; }
+            .main-container { box-shadow: none !important; border: none !important; padding: 0 !important; background-color: white !important; }
+            table { border: 1px solid #000 !important; background-color: white !important; min-width: 100% !important; }
+            th, td { border: 1px solid #000 !important; padding: 10px !important; color: black !important; }
             th { background-color: #eee !important; }
             tr.fila-peticion:nth-child(even) td { background-color: white !important; }
         }
@@ -273,33 +269,37 @@ try {
                 <div class="titulo-fecha">
                     📅 Peticiones del <?php echo date("d/m/Y", strtotime($fecha)); ?>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 12%;">Hora</th>
-                            <th style="width: 28%;">Nombre</th>
-                            <th style="width: 60%;">Petición</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($peticiones_dia as $row): ?>
-                            <tr class="fila-peticion" data-id="<?php echo $row['id']; ?>">
-                                <td class="hora"><?php echo date("H:i", strtotime($row['fecha_registro'])); ?></td>
-                                <td class="nombre"><?php echo htmlspecialchars($row['nombre']); ?></td>
-                                <td class="peticion"><?php echo nl2br(htmlspecialchars($row['peticion'])); ?></td>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Hora</th>
+                                <th style="width: 30%;">Nombre</th>
+                                <th style="width: 55%;">Petición</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($peticiones_dia as $row): ?>
+                                <tr class="fila-peticion" data-id="<?php echo $row['id']; ?>">
+                                    <td class="hora"><?php echo date("H:i", strtotime($row['fecha_registro'])); ?></td>
+                                    <td class="nombre"><?php echo htmlspecialchars($row['nombre']); ?></td>
+                                    <td class="peticion"><?php echo nl2br(htmlspecialchars($row['peticion'])); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <table>
-                <tbody>
-                    <tr>
-                        <td style="text-align: center; color: #8D6E63; padding: 30px;">No se han recibido peticiones hasta el momento.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style="text-align: center; color: #8D6E63; padding: 30px;">No se han recibido peticiones hasta el momento.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
 

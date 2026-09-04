@@ -4,11 +4,8 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
-// Configurar zona horaria de Venezuela en PHP
+// Configurar zona horaria de Venezuela
 date_default_timezone_set('America/Caracas');
-
-// Definir PIN de administración para eliminar registros (puedes cambiarlo aquí)
-define('ADMIN_PIN', '1234');
 
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
 $host = getenv('MYSQLHOST') ?: ($_ENV['MYSQLHOST'] ?? $_SERVER['MYSQLHOST'] ?? 'mysql.railway.internal');
@@ -54,27 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['enviar_peticion'])) {
         }
     } else {
         $mensaje_error = "Por favor, completa todos los campos requeridos.";
-    }
-}
-
-// PROCESAR ELIMINACIÓN DE REGISTROS DEL MES PASADO (ADMIN)
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['limpiar_mes_anterior'])) {
-    $pin_ingresado = trim($_POST['admin_pin'] ?? '');
-
-    if ($pin_ingresado === ADMIN_PIN) {
-        try {
-            // Eliminar registros anteriores al primer día del mes actual
-            $primer_dia_mes_actual = date('Y-m-01 00:00:00');
-            $stmt = $pdo->prepare("DELETE FROM registros WHERE fecha_registro < :fecha_corte");
-            $stmt->execute([':fecha_corte' => $primer_dia_mes_actual]);
-            
-            $filas_eliminadas = $stmt->rowCount();
-            $mensaje_exito = "Se han eliminado $filas_eliminadas petición(es) del mes pasado correctamente.";
-        } catch (PDOException $e) {
-            $mensaje_error = "No se pudieron eliminar los registros antiguos.";
-        }
-    } else {
-        $mensaje_error = "PIN de administración incorrecto.";
     }
 }
 
@@ -209,7 +185,7 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
             font-size: 14px;
             color: #5D4037;
         }
-        input[type="text"], input[type="password"], textarea {
+        input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #D7CCC8;
@@ -219,7 +195,7 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
             transition: border-color 0.2s;
             background-color: #FAFAFA;
         }
-        input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+        input[type="text"]:focus, textarea:focus {
             border-color: #E8A5B8;
             background-color: #FFFFFF;
         }
@@ -243,47 +219,6 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
         }
         .btn-submit:hover {
             background-color: #D894A7;
-        }
-        /* Estilos discretos para sección de administración */
-        .admin-section {
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px dashed #E0D7D3;
-            text-align: center;
-        }
-        .admin-toggle {
-            background: none;
-            border: none;
-            color: #A1887F;
-            font-size: 12px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .admin-toggle:hover {
-            color: #5D4037;
-        }
-        .admin-form {
-            display: none;
-            margin-top: 10px;
-            background-color: #FAFAFA;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #E0E0E0;
-        }
-        .btn-danger {
-            background-color: #E57373;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 8px;
-            width: 100%;
-            font-weight: bold;
-        }
-        .btn-danger:hover {
-            background-color: #D32F2F;
         }
     </style>
 </head>
@@ -326,31 +261,7 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
 
         <button type="submit" name="enviar_peticion" class="btn-submit">Enviar Petición</button>
     </form>
-
-    <!-- Botón discreto de Administración -->
-    <div class="admin-section">
-        <button type="button" class="admin-toggle" onclick="toggleAdminForm()">Limpieza de peticiones (Admin)</button>
-        
-        <div id="adminForm" class="admin-form">
-            <form method="POST" action="">
-                <p style="font-size: 11px; color: #757575; margin: 0 0 8px 0;">Elimina peticiones registradas antes del 1° del mes actual.</p>
-                <input type="password" name="admin_pin" placeholder="Ingresa PIN de seguridad" style="padding: 8px; font-size: 13px;" required>
-                <button type="submit" name="limpiar_mes_anterior" class="btn-danger" onclick="return confirm('¿Confirmas eliminar todas las peticiones del mes pasado?');">Borrar mes anterior</button>
-            </form>
-        </div>
-    </div>
 </div>
-
-<script>
-function toggleAdminForm() {
-    var form = document.getElementById('adminForm');
-    if (form.style.display === 'block') {
-        form.style.display = 'none';
-    } else {
-        form.style.display = 'block';
-    }
-}
-</script>
 
 </body>
 </html>

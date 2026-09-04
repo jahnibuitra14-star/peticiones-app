@@ -7,12 +7,13 @@ error_reporting(E_ALL);
 // Configurar zona horaria de Venezuela en PHP
 date_default_timezone_set('America/Caracas');
 
+
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
-$host = $_ENV['MYSQLHOST'] ?? 'mysql.railway.internal';
-$port = $_ENV['MYSQLPORT'] ?? '3306';
-$db   = $_ENV['MYSQLDATABASE'] ?? $_ENV['MYSQL_DATABASE'] ?? 'railway';
-$user = $_ENV['MYSQLUSER'] ?? 'root';
-$pass = $_ENV['MYSQLPASSWORD'] ?? $_ENV['MYSQL_ROOT_PASSWORD'] ?? '';
+$host = getenv('MYSQLHOST') ?: ($_ENV['MYSQLHOST'] ?? $_SERVER['MYSQLHOST'] ?? 'mysql.railway.internal');
+$port = getenv('MYSQLPORT') ?: ($_ENV['MYSQLPORT'] ?? $_SERVER['MYSQLPORT'] ?? '3306');
+$db   = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'railway');
+$user = getenv('MYSQLUSER') ?: ($_ENV['MYSQLUSER'] ?? $_SERVER['MYSQLUSER'] ?? 'root');
+$pass = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";

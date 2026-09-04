@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 date_default_timezone_set('America/Caracas');
 
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
-$host = $_ENV['MYSQLHOST'] ?? 'localhost';
+$host = $_ENV['MYSQLHOST'] ?? '127.0.0.1';
 $port = $_ENV['MYSQLPORT'] ?? '3306';
 $db   = $_ENV['MYSQLDATABASE'] ?? 'railway';
 $user = $_ENV['MYSQLUSER'] ?? 'root';

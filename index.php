@@ -10,9 +10,9 @@ date_default_timezone_set('America/Caracas');
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
 $host = $_ENV['MYSQLHOST'] ?? 'mysql.railway.internal';
 $port = $_ENV['MYSQLPORT'] ?? '3306';
-$db   = $_ENV['MYSQLDATABASE'] ?? 'railway';
+$db   = $_ENV['MYSQLDATABASE'] ?? $_ENV['MYSQL_DATABASE'] ?? 'railway';
 $user = $_ENV['MYSQLUSER'] ?? 'root';
-$pass = $_ENV['MYSQLPASSWORD'] ?? '';
+$pass = $_ENV['MYSQLPASSWORD'] ?? $_ENV['MYSQL_ROOT_PASSWORD'] ?? '';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";

@@ -2,8 +2,9 @@
 // Configurar zona horaria oficial de Venezuela en PHP
 date_default_timezone_set('America/Caracas');
 
-// Configuración para captura de errores
+// Configuración para ocultar errores técnicos al usuario
 ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
 $mensaje_exito = "";
@@ -88,8 +89,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ]);
 
             $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
-       } catch (PDOException $e) {
-    $mensaje_error = "Error MySQL: " . $e->getMessage();
+      } catch (PDOException $e) {
+    $mensaje_error = "Error al procesar la petición. Inténtalo de nuevo en unos momentos.";
 }
     } else {
         $mensaje_error = "Por favor, completa todos los campos requeridos.";

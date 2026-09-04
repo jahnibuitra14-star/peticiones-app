@@ -44,14 +44,6 @@ try {
         }
     }
 
-    // LÓGICA PARA ELIMINAR TODO EL HISTORIAL COMPLETO
-    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'eliminar_todo') {
-        $stmt_delete = $pdo->prepare("DELETE FROM registros");
-        $stmt_delete->execute();
-        header("Location: admin.php?status=all_deleted");
-        exit;
-    }
-
     // LÓGICA PARA ELIMINAR PETICIONES DEL MES PASADO (CON PIN DE SEGURIDAD)
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'eliminar_mes_pasado') {
         $pin_ingresado = trim($_POST['admin_pin'] ?? '');
@@ -286,7 +278,7 @@ try {
             body { padding: 40px 20px; }
             .main-container { padding: 30px; }
             .acciones-header { width: auto; }
-            .btn-imprimir, .btn-eliminar-todo { flex: none; font-size: 13px; padding: 10px 18px; }
+            .btn-imprimir { flex: none; font-size: 13px; padding: 10px 18px; }
             h2 { font-size: 22px; }
             th, td { padding: 14px 16px; font-size: 15px; }
             table { min-width: 100%; }
@@ -308,12 +300,6 @@ try {
         <div class="header no-print">
             <h2>Historial de Peticiones</h2>
             <div class="acciones-header">
-                <?php if (count($todos_los_registros) > 0): ?>
-                    <form method="POST" action="admin.php" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar TODO el historial de peticiones?');">
-                        <input type="hidden" name="action" value="eliminar_todo">
-                        <button type="submit" class="btn-eliminar-todo">🗑️ Borrar Historial</button>
-                    </form>
-                <?php endif; ?>
                 <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Registros</button>
             </div>
         </div>
@@ -321,8 +307,6 @@ try {
         <?php if (isset($_GET['status'])): ?>
             <?php if ($_GET['status'] === 'deleted'): ?>
                 <div class="alerta-exito no-print">✓ Petición eliminada correctamente.</div>
-            <?php elseif ($_GET['status'] === 'all_deleted'): ?>
-                <div class="alerta-exito no-print">✓ Se han eliminado todas las peticiones correctamente.</div>
             <?php elseif ($_GET['status'] === 'month_deleted'): ?>
                 <div class="alerta-exito no-print">✓ Se han eliminado <?php echo (int)($_GET['count'] ?? 0); ?> petición(es) del mes pasado.</div>
             <?php elseif ($_GET['status'] === 'invalid_pin'): ?>

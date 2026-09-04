@@ -88,9 +88,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             ]);
 
             $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
-        } catch (PDOException $e) {
-            $mensaje_error = "Error al procesar la petición. Inténtalo de nuevo en unos momentos.";
-        }
+       } catch (PDOException $e) {
+    $mensaje_error = "Error MySQL: " . $e->getMessage();
+}
     } else {
         $mensaje_error = "Por favor, completa todos los campos requeridos.";
     }

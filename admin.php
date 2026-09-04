@@ -2,6 +2,9 @@
 // Configurar zona horaria oficial de Venezuela en PHP
 date_default_timezone_set('America/Caracas');
 
+// DEFINIR PIN DE SEGURIDAD PARA LA LIMPIEZA
+define('ADMIN_PIN', '1234');
+
 $todos_los_registros = [];
 $registros_por_fecha = [];
 
@@ -47,6 +50,24 @@ try {
         $stmt_delete->execute();
         header("Location: admin.php?status=all_deleted");
         exit;
+    }
+
+    // LÓGICA PARA ELIMINAR PETICIONES DEL MES PASADO (CON PIN DE SEGURIDAD)
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'eliminar_mes_pasado') {
+        $pin_ingresado = trim($_POST['admin_pin'] ?? '');
+
+        if ($pin_ingresado === ADMIN_PIN) {
+            $primer_dia_mes_actual = date('Y-m-01 00:00:00');
+            $stmt_delete_old = $pdo->prepare("DELETE FROM registros WHERE fecha_registro < :fecha_corte");
+            $stmt_delete_old->execute([':fecha_corte' => $primer_dia_mes_actual]);
+            
+            $filas_borradas = $stmt_delete_old->rowCount();
+            header("Location: admin.php?status=month_deleted&count=" . $filas_borradas);
+            exit;
+        } else {
+            header("Location: admin.php?status=invalid_pin");
+            exit;
+        }
     }
 
     // TRAE TODOS LOS REGISTROS
@@ -150,6 +171,52 @@ try {
             font-weight: 600;
             text-align: center;
         }
+        .alerta-error {
+            background-color: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* ESTILOS DISCRETOS PARA LIMPIEZA DE MES ANTERIOR */
+        .admin-limpieza-section {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px dashed #E0D7D3;
+            text-align: center;
+        }
+        .btn-toggle-limpieza {
+            background: none;
+            border: none;
+            color: #A1887F;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .btn-toggle-limpieza:hover { color: #5D4037; }
+        .box-limpieza {
+            display: none;
+            margin: 12px auto 0 auto;
+            max-width: 320px;
+            background-color: #FAFAFA;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #E0E0E0;
+        }
+        .input-pin {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #D7CCC8;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
 
         /* Contenedor responsivo para la tabla */
         .table-responsive {
@@ -242,7 +309,7 @@ try {
             <h2>Historial de Peticiones</h2>
             <div class="acciones-header">
                 <?php if (count($todos_los_registros) > 0): ?>
-                    <form method="POST" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar TODO el historial de peticiones?');">
+                    <form method="POST" action="admin.php" style="margin:0;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar TODO el historial de peticiones?');">
                         <input type="hidden" name="action" value="eliminar_todo">
                         <button type="submit" class="btn-eliminar-todo">🗑️ Borrar Historial</button>
                     </form>
@@ -256,6 +323,10 @@ try {
                 <div class="alerta-exito no-print">✓ Petición eliminada correctamente.</div>
             <?php elseif ($_GET['status'] === 'all_deleted'): ?>
                 <div class="alerta-exito no-print">✓ Se han eliminado todas las peticiones correctamente.</div>
+            <?php elseif ($_GET['status'] === 'month_deleted'): ?>
+                <div class="alerta-exito no-print">✓ Se han eliminado <?php echo (int)($_GET['count'] ?? 0); ?> petición(es) del mes pasado.</div>
+            <?php elseif ($_GET['status'] === 'invalid_pin'): ?>
+                <div class="alerta-error no-print">✕ PIN de administración incorrecto.</div>
             <?php endif; ?>
             <script>
                 if (window.history.replaceState) {
@@ -280,7 +351,7 @@ try {
                         </thead>
                         <tbody>
                             <?php foreach ($peticiones_dia as $row): ?>
-                                <tr class="fila-peticion" data-id="<?php echo $row['id']; ?>">
+                                <tr class="fila-peticion" data-id="<?php echo (int)$row['id']; ?>">
                                     <td class="hora"><?php echo date("H:i", strtotime($row['fecha_registro'])); ?></td>
                                     <td class="nombre"><?php echo htmlspecialchars($row['nombre']); ?></td>
                                     <td class="peticion"><?php echo nl2br(htmlspecialchars($row['peticion'])); ?></td>
@@ -301,9 +372,22 @@ try {
                 </table>
             </div>
         <?php endif; ?>
+
+        <!-- SECCIÓN DISCRETA EN EL PIE PARA ELIMINAR MES PASADO -->
+        <div class="admin-limpieza-section no-print">
+            <button type="button" class="btn-toggle-limpieza" onclick="toggleLimpiezaBox()">Limpieza del mes pasado</button>
+            <div id="boxLimpieza" class="box-limpieza">
+                <form method="POST" action="admin.php">
+                    <input type="hidden" name="action" value="eliminar_mes_pasado">
+                    <p style="font-size: 11px; color: #757575; margin: 0 0 8px 0;">Borra peticiones anteriores al primer día del mes actual.</p>
+                    <input type="password" name="admin_pin" class="input-pin" placeholder="Ingresa PIN de seguridad" required>
+                    <button type="submit" class="btn-eliminar-todo" style="width:100%;" onclick="return confirm('¿Confirmas eliminar las peticiones del mes pasado?');">Borrar mes anterior</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <form id="form-eliminar-individual" method="POST" style="display:none;">
+    <form id="form-eliminar-individual" method="POST" action="admin.php" style="display:none;">
         <input type="hidden" name="action" value="eliminar_uno">
         <input type="hidden" name="id" id="id-para-eliminar" value="">
     </form>
@@ -313,6 +397,13 @@ try {
     </div>
 
     <script>
+        // Lógica para toggle del menú discreto
+        function toggleLimpiezaBox() {
+            var box = document.getElementById('boxLimpieza');
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Lógica intacta para eliminar individual por clic derecho
         const menu = document.getElementById('context-menu');
         const formEliminar = document.getElementById('form-eliminar-individual');
         const inputId = document.getElementById('id-para-eliminar');

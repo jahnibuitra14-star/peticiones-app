@@ -1,7 +1,7 @@
 <?php
 // Ocultar errores técnicos al usuario en producción
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
 // Configurar zona horaria de Venezuela en PHP
@@ -35,7 +35,7 @@ try {
     $pdo->exec("SET NAMES utf8mb4");
 
 } catch (PDOException $e) {
-    $mensaje_error = "Error de conexión: " . $e->getMessage();
+    $mensaje_error = "Error al conectar con la base de datos. Por favor, reintenta más tarde.";
 }
 
 // PROCESAR ENVÍO DEL FORMULARIO

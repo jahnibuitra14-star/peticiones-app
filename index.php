@@ -33,24 +33,40 @@ try {
     $mensaje_error = "Error al conectar con la base de datos. Por favor, reintenta más tarde.";
 }
 
+// CAPTURAR ESTADO TRAS REDIRECCIÓN (PATRÓN PRG)
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'success') {
+        $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
+    } elseif ($_GET['status'] === 'error') {
+        $mensaje_error = "Error al procesar la petición. Inténtalo de nuevo en unos momentos.";
+    } elseif ($_GET['status'] === 'empty') {
+        $mensaje_error = "Por favor, completa todos los campos requeridos.";
+    }
+}
+
 // PROCESAR ENVÍO DE NUEVA PETICIÓN
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['enviar_peticion'])) {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['enviar_peticion'])) {
     $nombre = trim($_POST['nombre'] ?? '');
     $peticion = trim($_POST['peticion'] ?? '');
 
-    if (!empty($nombre) && !empty($peticion)) {
+    if (!empty($nombre) && !empty($peticion) && $pdo) {
         try {
             $stmt = $pdo->prepare("INSERT INTO registros (nombre, peticion, fecha_registro) VALUES (:nombre, :peticion, NOW())");
             $stmt->execute([
                 ':nombre' => $nombre,
                 ':peticion' => $peticion
             ]);
-            $mensaje_exito = "¡Tu petición ha sido enviada con éxito!";
+            
+            // Redirección limpia tras guardar en DB
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?status=success");
+            exit;
         } catch (PDOException $e) {
-            $mensaje_error = "Error al procesar la petición. Inténtalo de nuevo en unos momentos.";
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?status=error");
+            exit;
         }
     } else {
-        $mensaje_error = "Por favor, completa todos los campos requeridos.";
+        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?status=empty");
+        exit;
     }
 }
 
@@ -248,7 +264,7 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="">
+    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <div class="form-group">
             <label for="nombre">Nombre completo:</label>
             <input type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required>
@@ -263,5 +279,11 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
     </form>
 </div>
 
+<script>
+    // Limpiar parámetros de URL tras mostrar alerta de éxito
+    if (window.history.replaceState && window.location.search.includes('status=')) {
+        window.history.replaceState(null, null, window.location.pathname);
+    }
+</script>
 </body>
 </html>

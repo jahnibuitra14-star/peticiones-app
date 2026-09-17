@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['enviar_peticion'])) {
     $nombre = trim($_POST['nombre'] ?? '');
     $peticion = trim($_POST['peticion'] ?? '');
 
-    if (!empty($nombre) && !empty($peticion) && $pdo) {
+    if (!empty($nombre) && !empty($peticion) && isset($pdo)) {
         try {
             $stmt = $pdo->prepare("INSERT INTO registros (nombre, peticion, fecha_registro) VALUES (:nombre, :peticion, NOW())");
             $stmt->execute([
@@ -264,7 +264,7 @@ $versiculo_hoy = $versiculos[$indice_versiculo];
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+    <form method="POST" action="">
         <div class="form-group">
             <label for="nombre">Nombre completo:</label>
             <input type="text" id="nombre" name="nombre" placeholder="Tu nombre y apellido" required>

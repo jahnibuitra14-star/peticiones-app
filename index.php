@@ -7,12 +7,12 @@ error_reporting(E_ALL);
 // Configurar zona horaria de Venezuela
 date_default_timezone_set('America/Caracas');
 
-// CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
-$host = getenv('MYSQLHOST') ?: ($_ENV['MYSQLHOST'] ?? $_SERVER['MYSQLHOST'] ?? 'mysql.railway.internal');
-$port = getenv('MYSQLPORT') ?: ($_ENV['MYSQLPORT'] ?? $_SERVER['MYSQLPORT'] ?? '3306');
-$db   = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'railway');
-$user = getenv('MYSQLUSER') ?: ($_ENV['MYSQLUSER'] ?? $_SERVER['MYSQLUSER'] ?? 'root');
-$pass = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
+// CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
+$host    = getenv('MYSQLHOST')     ?: ($_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? 'localhost');
+$port    = getenv('MYSQLPORT')     ?: ($_ENV['MYSQLPORT']     ?? $_SERVER['MYSQLPORT']     ?? '3306');
+$db      = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'defaultdb');
+$user    = getenv('MYSQLUSER')     ?: ($_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? 'root');
+$pass    = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
@@ -22,6 +22,12 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
+// Si la conexión es hacia la nube (Aiven), habilitamos la opción de SSL
+if ($host !== 'localhost' && $host !== '127.0.0.1') {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
+    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+}
+
 $mensaje_exito = "";
 $mensaje_error = "";
 
@@ -29,6 +35,17 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     $pdo->exec("SET time_zone = '-04:00'");
     $pdo->exec("SET NAMES utf8mb4");
+
+    // AUTO-CREACIÓN DE TABLA EN AIVEN/MYSQL SI NO EXISTE
+    $sql_create_table = "CREATE TABLE IF NOT EXISTS registros (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(150) NOT NULL,
+        peticion TEXT NOT NULL,
+        fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    $pdo->exec($sql_create_table);
+
 } catch (PDOException $e) {
     $mensaje_error = "Error al conectar con la base de datos. Por favor, reintenta más tarde.";
 }

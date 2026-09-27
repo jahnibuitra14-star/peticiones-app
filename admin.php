@@ -8,30 +8,33 @@ define('ADMIN_PIN', '1234');
 $todos_los_registros = [];
 $registros_por_fecha = [];
 
+// CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
+$host    = getenv('MYSQLHOST')     ?: ($_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? '127.0.0.1');
+$port    = getenv('MYSQLPORT')     ?: ($_ENV['MYSQLPORT']     ?? $_SERVER['MYSQLPORT']     ?? '3306');
+$db      = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'defaultdb');
+$user    = getenv('MYSQLUSER')     ?: ($_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? 'root');
+$pass    = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
+$charset = 'utf8mb4';
+
+$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
+
+// Si la conexión es hacia la nube (Aiven), habilitamos la opción de SSL
+if ($host !== 'localhost' && $host !== '127.0.0.1') {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
+    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+}
+
 try {
-    // Lectura preferente de URL directa de base de datos
-    $db_url = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: getenv('MYSQLURL');
-
-    if ($db_url) {
-        $dbopts = parse_url($db_url);
-        $host = $dbopts['host'] ?? '127.0.0.1';
-        $port = $dbopts['port'] ?? '3306';
-        $user = $dbopts['user'] ?? 'root';
-        $pass = $dbopts['pass'] ?? '';
-        $db   = isset($dbopts['path']) ? ltrim($dbopts['path'], '/') : 'railway';
-    } else {
-        $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
-        $db   = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
-        $user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
-        $pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('MYSQL_ROOT_PASSWORD') ?: '';
-        $port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: '3306';
-    }
-
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = new PDO($dsn, $user, $pass, $options);
 
     // FORZAR A MYSQL A USAR LA ZONA HORARIA DE VENEZUELA (UTC-4)
-    $pdo->exec("SET time_zone = '-04:00';");
+    $pdo->exec("SET time_zone = '-04:00'");
+    $pdo->exec("SET NAMES utf8mb4");
 
     // LÓGICA PARA ELIMINAR UNA PETICIÓN INDIVIDUAL
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'eliminar_uno') {
@@ -65,7 +68,7 @@ try {
     // TRAE TODOS LOS REGISTROS
     $stmt = $pdo->prepare("SELECT *, DATE(fecha_registro) as fecha_dia FROM registros ORDER BY fecha_registro DESC");
     $stmt->execute();
-    $todos_los_registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $todos_los_registros = $stmt->fetchAll();
 
     // AGRUPAR REGISTROS POR FECHA
     foreach ($todos_los_registros as $row) {
@@ -387,7 +390,7 @@ try {
             box.style.display = (box.style.display === 'block') ? 'none' : 'block';
         }
 
-        // Lógica intacta para eliminar individual por clic derecho
+        // Lógica para eliminar individual por clic derecho
         const menu = document.getElementById('context-menu');
         const formEliminar = document.getElementById('form-eliminar-individual');
         const inputId = document.getElementById('id-para-eliminar');

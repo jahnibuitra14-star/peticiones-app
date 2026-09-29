@@ -9,6 +9,8 @@ date_default_timezone_set('America/Caracas');
 
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
 $host    = trim(getenv('MYSQLHOST')     ?: '127.0.0.1');
+// Diagnóstico temporal para ver qué lee PHP:
+die("El valor de host que lee PHP es: [" . $host . "]");
 $port    = trim(getenv('MYSQLPORT')     ?: '3306');
 $db      = trim(getenv('MYSQLDATABASE') ?: 'defaultdb');
 $user    = trim(getenv('MYSQLUSER')     ?: 'root');

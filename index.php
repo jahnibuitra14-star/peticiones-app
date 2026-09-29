@@ -8,11 +8,11 @@ error_reporting(E_ALL);
 date_default_timezone_set('America/Caracas');
 
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
-$host    = getenv('MYSQLHOST')     ?: ($_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? 'localhost');
-$port    = getenv('MYSQLPORT')     ?: ($_ENV['MYSQLPORT']     ?? $_SERVER['MYSQLPORT']     ?? '3306');
-$db      = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'defaultdb');
-$user    = getenv('MYSQLUSER')     ?: ($_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? 'root');
-$pass    = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
+$host    = trim(getenv('MYSQLHOST')     ?: ($_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? 'localhost'));
+$port    = trim(getenv('MYSQLPORT')     ?: ($_ENV['MYSQLPORT']     ?? $_SERVER['MYSQLPORT']     ?? '3306'));
+$db      = trim(getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'defaultdb'));
+$user    = trim(getenv('MYSQLUSER')     ?: ($_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? 'root'));
+$pass    = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?? ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
@@ -22,9 +22,8 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Si la conexión es hacia la nube (Aiven), habilitamos la opción de SSL
+// Si la conexión es hacia la nube (Aiven), configuramos SSL correctamente
 if ($host !== 'localhost' && $host !== '127.0.0.1') {
-    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
     $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
 }
 

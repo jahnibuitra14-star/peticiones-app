@@ -8,24 +8,25 @@ define('ADMIN_PIN', '1234');
 $todos_los_registros = [];
 $registros_por_fecha = [];
 
-// CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
-$host    = getenv('MYSQLHOST')     ?: ($_ENV['MYSQLHOST']     ?? $_SERVER['MYSQLHOST']     ?? '127.0.0.1');
-$port    = getenv('MYSQLPORT')     ?: ($_ENV['MYSQLPORT']     ?? $_SERVER['MYSQLPORT']     ?? '3306');
-$db      = getenv('MYSQLDATABASE') ?: ($_ENV['MYSQLDATABASE'] ?? $_SERVER['MYSQLDATABASE'] ?? 'defaultdb');
-$user    = getenv('MYSQLUSER')     ?: ($_ENV['MYSQLUSER']     ?? $_SERVER['MYSQLUSER']     ?? 'root');
-$pass    = getenv('MYSQLPASSWORD') ?: ($_ENV['MYSQLPASSWORD'] ?? $_SERVER['MYSQLPASSWORD'] ?? getenv('MYSQL_ROOT_PASSWORD') ?: ($_ENV['MYSQL_ROOT_PASSWORD'] ?? ''));
-$charset = 'utf8mb4';
+// CONEXIÓN DIRECTA A LA BASE DE DATOS USANDO LAS VARIABLES DE ENTORNO DE RENDER / AIVEN
+$host     = trim(getenv('MYSQLHOST')     ?: '127.0.0.1');
+$port     = trim(getenv('MYSQLPORT')     ?: '3306');
+$db       = trim(getenv('MYSQLDATABASE') ?: 'defaultdb');
+$user     = trim(getenv('MYSQLUSER')     ?: 'root');
+$pass     = getenv('MYSQLPASSWORD')      ?: '';
+$charset  = 'utf8mb4';
 
+// Cadena DSN de PDO incluyendo explícitamente el puerto correcto (ej. 25498)
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
+
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Si la conexión es hacia la nube (Aiven), habilitamos la opción de SSL
+// Si la conexión es hacia la nube (Aiven), configuramos SSL correctamente
 if ($host !== 'localhost' && $host !== '127.0.0.1') {
-    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
     $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
 }
 

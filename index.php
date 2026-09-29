@@ -9,8 +9,6 @@ date_default_timezone_set('America/Caracas');
 
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS (Compatible con Aiven, Render y XAMPP)
 $host    = trim(getenv('MYSQLHOST')     ?: '127.0.0.1');
-// Diagnóstico temporal para ver qué lee PHP:
-die("El valor de host que lee PHP es: [" . $host . "]");
 $port    = trim(getenv('MYSQLPORT')     ?: '3306');
 $db      = trim(getenv('MYSQLDATABASE') ?: 'defaultdb');
 $user    = trim(getenv('MYSQLUSER')     ?: 'root');
@@ -24,8 +22,9 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Si la conexión es hacia la nube (Aiven), configuramos SSL correctamente
+// Si la conexión es hacia la nube (Aiven), habilitamos estrictamente SSL
 if ($host !== 'localhost' && $host !== '127.0.0.1') {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
     $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
 }
 
@@ -48,7 +47,7 @@ try {
     $pdo->exec($sql_create_table);
 
 } catch (PDOException $e) {
-    $mensaje_error = "Error técnico exacto: " . $e->getMessage();
+    $mensaje_error = "Error al conectar con la base de datos. Por favor, reintenta más tarde.";
 }
 
 // CAPTURAR ESTADO TRAS REDIRECCIÓN (PATRÓN PRG)

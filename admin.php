@@ -16,7 +16,7 @@ $user     = trim(getenv('MYSQLUSER')     ?: 'root');
 $pass     = getenv('MYSQLPASSWORD')      ?: '';
 $charset  = 'utf8mb4';
 
-// Cadena DSN de PDO incluyendo explícitamente el puerto correcto (ej. 25498)
+// Cadena DSN de PDO incluyendo explícitamente el puerto correcto
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
 
 $options = [
@@ -25,8 +25,9 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// Si la conexión es hacia la nube (Aiven), configuramos SSL correctamente
+// Si la conexión es hacia la nube (Aiven), habilitamos estrictamente SSL
 if ($host !== 'localhost' && $host !== '127.0.0.1') {
+    $options[PDO::MYSQL_ATTR_SSL_CA] = true;
     $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
 }
 
@@ -349,7 +350,7 @@ try {
                     </table>
                 </div>
             <?php endforeach; ?>
-        <?php else: ?>
+        <? else: ?>
             <div class="table-responsive">
                 <table>
                     <tbody>

@@ -46,7 +46,7 @@ try {
     $pdo->exec($sql_create_table);
 
 } catch (PDOException $e) {
-    $mensaje_error = "Error al conectar con la base de datos. Por favor, reintenta más tarde.";
+    $mensaje_error = "Error técnico exacto: " . $e->getMessage();
 }
 
 // CAPTURAR ESTADO TRAS REDIRECCIÓN (PATRÓN PRG)
